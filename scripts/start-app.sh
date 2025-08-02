@@ -28,17 +28,6 @@ kubectl create namespace gitport --dry-run=client -o yaml | kubectl apply -f -
 echo "📋 Applying Kubernetes manifests..."
 kubectl apply -f manifest/ -n gitport
 
-# Wait for deployment to be ready
-echo "⏳ Waiting for deployment to be ready..."
-kubectl wait --for=condition=available --timeout=300s deployment/app -n gitport
-
-# Get service information
-echo "🌐 Service information:"
-kubectl get svc -n gitport
-
-# Get pod information
-echo "📦 Pod information:"
-kubectl get pods -n gitport
 
 # Get your public IP
 PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
