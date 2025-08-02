@@ -1,6 +1,14 @@
 services:
   app:
     build: .
+    container_name: gitport
+    networks: 
+      - gitport-network
     image: gitport:latest
     ports:
       - "80:3000"
+
+
+networks:
+  gitport-network:
+    driver: bridge

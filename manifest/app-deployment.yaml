@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  labels:
+    app: gitport
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitport
+  template:
+    metadata:
+      labels:
+        app: gitport
+    spec:
+      containers:
+        - image: gitport:latest
+          name: gitport
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+      restartPolicy: Always
