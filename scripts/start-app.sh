@@ -4,8 +4,20 @@ set -e
 
 echo "🚀 Deploying GitPort to AWS Kubernetes..."
 
+# Check if kubectl is available
+if ! command -v kubectl &> /dev/null; then
+    echo "❌ kubectl is not installed. Please run setup-k8s.sh first."
+    exit 1
+fi
+
+# Check if Kubernetes cluster is running
+if ! kubectl cluster-info &> /dev/null; then
+    echo "❌ Kubernetes cluster is not running. Please run setup-k8s.sh first."
+    exit 1
+fi
+
 # Build Docker image
-echo "Building Docker image..."
+echo "🏗️ Building Docker image..."
 docker build -t gitport:latest .
 
 # Create namespace
@@ -34,8 +46,8 @@ PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
 echo ""
 echo "✅ Deployment completed!"
 echo "🌐 Your app is accessible at:"
-echo "   http://$PUBLIC_IP:30000"
+echo "   http://$PUBLIC_IP"
 echo ""
 echo "📊 Monitor your deployment:"
 echo "   kubectl get pods -n gitport"
-echo "   kubectl logs -f deployment/app -n gitport" 
+echo "   kubectl logs -f deployment/app -n gitport"
