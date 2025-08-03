@@ -22,7 +22,10 @@ docker build -t gitport:latest .
 
 # Load image into K3s containerd
 echo "📦 Loading image into K3s..."
-sudo k3s ctr images import <(docker save gitport:latest)
+TMP_IMG=/tmp/gitport.tar
+docker save gitport:latest -o $TMP_IMG
+sudo k3s ctr images import $TMP_IMG
+rm $TMP_IMG
 
 # Create namespace
 echo "📁 Creating namespace..."
