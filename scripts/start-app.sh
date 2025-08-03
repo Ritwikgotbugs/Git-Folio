@@ -2,23 +2,27 @@
 
 set -e
 
-echo "🚀 Deploying GitPort to AWS Kubernetes..."
+echo "🚀 Deploying GitPort to AWS K3s..."
 
 # Check if kubectl is available
 if ! command -v kubectl &> /dev/null; then
-    echo "❌ kubectl is not installed. Please run setup-k8s.sh first."
+    echo "❌ kubectl is not installed. Please install K3s first."
     exit 1
 fi
 
-# Check if Kubernetes cluster is running
+# Check if K3s cluster is running
 if ! kubectl cluster-info &> /dev/null; then
-    echo "❌ Kubernetes cluster is not running. Please run setup-k8s.sh first."
+    echo "❌ K3s cluster is not running. Please start K3s first."
     exit 1
 fi
 
 # Build Docker image
 echo "🏗️ Building Docker image..."
 docker build -t gitport:latest .
+
+# Load image into K3s containerd
+echo "📦 Loading image into K3s..."
+sudo k3s ctr images import <(docker save gitport:latest)
 
 # Create namespace
 echo "📁 Creating namespace..."

@@ -18,6 +18,7 @@ spec:
         - image: gitport:latest
           name: gitport
           imagePullPolicy: Never
+          imagePullSecrets: []
           ports:
             - containerPort: 3000
               protocol: TCP
