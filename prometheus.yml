@@ -1,0 +1,24 @@
+# prometheus --config.file=C:\Users\Ritwik\Desktop\All\Projects\GitPort\dev-port-wizard\prometheus.yml --web.listen-address=:5000
+
+
+global:
+  scrape_interval: 2s
+  evaluation_interval: 5s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  - job_name: 'git-port-backend'
+    static_configs:
+      - targets: ['backend:4000']
+    metrics_path: '/metrics'
+    scrape_interval: 2s
+    scrape_timeout: 1s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093

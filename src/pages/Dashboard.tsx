@@ -1,3 +1,4 @@
+import { fetchGitHubEvents, fetchGitHubFollowers, fetchGitHubFollowing, fetchGitHubRepos, fetchGitHubUser } from "@/api/github";
 import { ActivityTimeline } from "@/components/ActivityTimeline";
 import { CollaborationNetwork } from "@/components/CollaborationNetwork";
 import { CommunityImpactScore } from "@/components/CommunityImpactScore";
@@ -5,6 +6,7 @@ import { ContributionGraph } from "@/components/ContributionGraph";
 import { LanguageChart } from "@/components/LanguageChart";
 import { RepoHealthMetrics } from "@/components/RepoHealthMetrics";
 import { RepositoryPerformanceChart } from "@/components/RepositoryPerformanceChart";
+import { SocialLinks } from "@/components/SocialLinks";
 import { TechEvolutionChart } from "@/components/TechEvolutionChart";
 import { TopRepository } from "@/components/TopRepository";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +17,6 @@ import { ArrowLeft, Calendar, GitFork, Link2, MapPin, Share2, Star } from "lucid
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import NotFound from "./NotFound";
-import { SocialLinks } from "@/components/SocialLinks";
 
 interface GitHubUser {
   login: string;
@@ -182,30 +183,20 @@ const Dashboard = () => {
     setNotFound(false);
     try {
       // Fetch user data
-      const userResponse = await fetch(`https://api.github.com/users/${username}`);
-      if (!userResponse.ok) {
-        setNotFound(true);
-        throw new Error("User not found");
-      }
-      const userData = await userResponse.json();
+      const userData = await fetchGitHubUser(username);
 
       // Save to history
       saveToHistory(userData);
 
       // Fetch repositories
-      const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=100`);
-      const reposData = await reposResponse.json();
+      const reposData = await fetchGitHubRepos(username);
 
       // Fetch user events (activity)
-      const eventsResponse = await fetch(`https://api.github.com/users/${username}/events?per_page=30`);
-      const eventsData = await eventsResponse.json();
+      const eventsData = await fetchGitHubEvents(username);
 
       // Fetch followers and following
-      const followersResponse = await fetch(`https://api.github.com/users/${username}/followers?per_page=30`);
-      const followersData = await followersResponse.json();
-      
-      const followingResponse = await fetch(`https://api.github.com/users/${username}/following?per_page=30`);
-      const followingData = await followingResponse.json();
+      const followersData = await fetchGitHubFollowers(username);
+      const followingData = await fetchGitHubFollowing(username);
 
       // Calculate language statistics
       const languageStats: LanguageStats = {};

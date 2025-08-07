@@ -1,3 +1,4 @@
+import { fetchGitHubUser } from "@/api/github";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -24,11 +25,7 @@ const Home = () => {
     setLoading(true);
     try {
       // Verify user exists
-      const response = await fetch(`https://api.github.com/users/${username}`);
-      if (!response.ok) {
-        throw new Error("User not found");
-      }
-      
+      await fetchGitHubUser(username);
       // Navigate to dashboard
       navigate(`/dashboard/${username}`);
     } catch (error) {
