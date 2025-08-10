@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    container_name: gitport
+    container_name: frontend
     networks: 
       - gitport-network
     image: gitport:latest
@@ -10,7 +10,7 @@ services:
 
   backend:
     build: ./server
-    container_name: gitport-backend
+    container_name: backend
     networks:
       - gitport-network
     ports:

@@ -193,6 +193,7 @@ const Dashboard = () => {
 
       // Fetch user events (activity)
       const eventsData = await fetchGitHubEvents(username);
+      console.log(eventsData);
 
       // Fetch followers and following
       const followersData = await fetchGitHubFollowers(username);

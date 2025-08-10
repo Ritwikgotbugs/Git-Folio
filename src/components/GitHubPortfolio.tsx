@@ -1,14 +1,14 @@
+import { fetchGitHubRepos, fetchGitHubUser } from "@/api/github";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { BarChart3, Calendar, Code2, GitFork, Github, Link2, MapPin, Monitor, Moon, PieChart, Search, Sparkles, Star, Sun, TrendingUp } from "lucide-react";
+import { Calendar, Code2, GitFork, Github, Link2, MapPin, Monitor, Moon, PieChart, Search, Sparkles, Star, Sun, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ContributionGraph } from "./ContributionGraph";
 import { LanguageChart } from "./LanguageChart";
-import { RepoStatsChart } from "./RepoStatsChart";
 import { useTheme } from "./ThemeProvider";
 
 interface GitHubUser {
@@ -179,15 +179,10 @@ export const GitHubPortfolio = ({ initialUsername }: GitHubPortfolioProps) => {
     setLoading(true);
     try {
       // Fetch user data
-      const userResponse = await fetch(`https://api.github.com/users/${targetUsername}`);
-      if (!userResponse.ok) {
-        throw new Error("User not found");
-      }
-      const userData = await userResponse.json();
+      const userData = await fetchGitHubUser(targetUsername);
 
       // Fetch repositories
-      const reposResponse = await fetch(`https://api.github.com/users/${targetUsername}/repos?sort=updated&per_page=100`);
-      const reposData = await reposResponse.json();
+      const reposData = await fetchGitHubRepos(targetUsername);
 
       // Calculate language statistics
       const languageStats: LanguageStats = {};

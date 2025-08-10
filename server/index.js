@@ -3,13 +3,14 @@ const fetch = require('node-fetch');
 const cors = require('cors');
 const client = require('prom-client');
 const registerApiRoutes = require('./routes');
+require('dotenv').config();
 
 const app = express();
 const PORT = 4000;
 
 app.use(cors());
 
-// Prometheus metrics setup
+// =================== Prometheus Metrics Setup ===================
 const httpRequestCounter = new client.Counter({
   name: 'http_requests_total',
   help: 'Total number of HTTP requests',
@@ -28,9 +29,29 @@ const errorCounter = new client.Counter({
   labelNames: ['method', 'route', 'status']
 });
 
+const githubApiCallsSuccessGauge = new client.Gauge({
+  name: 'github_api_calls_success_total',
+  help: 'Total successful GitHub API calls (status 304 and 200)'
+});
+
+const githubApiCallsFailedGauge = new client.Gauge({
+  name: 'github_api_calls_failed_total',
+  help: 'Total failed GitHub API calls (status >= 400)'
+});
+
+const githubRateLimitRemainingGauge = new client.Gauge({
+  name: 'github_rate_limit_remaining',
+  help: 'Remaining GitHub API calls for the current token'
+});
+const githubRateLimitGauge = new client.Gauge({
+  name: 'github_rate_limit',
+  help: 'Total GitHub API calls for the current token'
+});
+
+
 client.collectDefaultMetrics();
 
-// Middleware to track metrics for all requests
+// =================== Middleware to Track All Requests ===================
 app.use((req, res, next) => {
   const startHrTime = process.hrtime();
 
@@ -55,7 +76,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// In-memory counters for each API route
+// =================== In-memory tracking ===================
 const apiRequestCounts = {
   user_details: 0,
   user_repos: 0,
@@ -91,7 +112,29 @@ function getRouteType(path) {
   return null;
 }
 
-// Additional middleware for custom metrics
+// =================== GitHub Fetch Wrapper ===================
+async function fetchGithub(url) {
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${process.env.GITHUB_TOKEN_1}`,
+      'User-Agent': 'GitPort-App'
+    }
+  });
+
+  const total = parseInt(response.headers.get('x-ratelimit-limit'));
+  if (!isNaN(total)) {
+    githubRateLimitGauge.set(total);
+  }
+  const remaining = parseInt(response.headers.get('x-ratelimit-remaining'));
+  if (!isNaN(remaining)) {
+    githubRateLimitRemainingGauge.set(remaining);
+  }
+
+
+  return response;
+}
+
+// =================== Additional Tracking Middleware ===================
 app.use((req, res, next) => {
   const routeType = getRouteType(req.path);
   if (routeType) {
@@ -109,12 +152,21 @@ app.use((req, res, next) => {
   next();
 });
 
+// =================== Routes ===================
 app.get('/', async (req, res) => {
   res.send('Welcome to Git Port.');
 });
 
 // Prometheus metrics endpoint
 app.get('/metrics', async (req, res) => {
+  const totalSuccess = (statusCounts[200] || 0) + (statusCounts[304] || 0);
+  githubApiCallsSuccessGauge.set(totalSuccess);
+
+  const totalFailures = Object.entries(statusCounts)
+    .filter(([code]) => parseInt(code) >= 500)
+    .reduce((sum, [, count]) => sum + count, 0);
+  githubApiCallsFailedGauge.set(totalFailures);
+
   res.set('Content-Type', client.register.contentType);
   res.end(await client.register.metrics());
 });
@@ -129,11 +181,8 @@ app.get('/metrics/clean', (req, res) => {
   res.json({
     total,
     details: { ...apiRequestCounts },
-    methods: { ...methodCounts },
     statusCodes: { ...statusCounts },
-    perUser: { ...perUserCounts },
     averageResponseTimeMs,
-    errors: { ...errorCounts },
     server: {
       version: '1.0.0',
       env: process.env.NODE_ENV || 'development',
@@ -143,9 +192,10 @@ app.get('/metrics/clean', (req, res) => {
   });
 });
 
+// Register API routes with our fetch wrapper
+registerApiRoutes(app, errorCounts,fetchGithub);
 
-registerApiRoutes(app, errorCounts);
-
+// =================== Start Server ===================
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });

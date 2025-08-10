@@ -1,9 +1,9 @@
-import { fetchGitHubUser } from "@/api/github";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Clock, Github, Search } from "lucide-react";
 import { useState } from "react";
+import { fetchGitHubUser } from "@/api/github";
 import { Link, useNavigate } from "react-router-dom";
 
 const Home = () => {
