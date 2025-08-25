@@ -113,13 +113,37 @@ function getRouteType(path) {
 }
 
 // =================== GitHub Fetch Wrapper ===================
+
+const tokens = process.env.GITHUB_TOKENS
+  ? process.env.GITHUB_TOKENS.split(",").map(t => t.trim())
+  : [];
+
+let currentTokenIndex = 0;
+
+function getGitHubHeaders() {
+  if (tokens.length === 0) {
+    throw new Error("No GitHub tokens configured");
+  }
+  return {
+    Authorization: `Bearer ${tokens[currentTokenIndex]}`,
+    'User-Agent': 'GitPort-App'
+  };
+}
+
+function rotateToken() {
+  currentTokenIndex = (currentTokenIndex + 1) % tokens.length;
+  console.log(`🔄 Rotated to token index ${currentTokenIndex}`);
+}
+
 async function fetchGithub(url) {
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${process.env.GITHUB_TOKEN_1}`,
-      'User-Agent': 'GitPort-App'
-    }
-  });
+  let response = await fetch(url, { headers: getGitHubHeaders() });
+
+  // Rotate if we hit rate limit (403)
+  if (response.status === 403) {
+    console.warn("⚠️ Rate limit hit. Rotating token...");
+    rotateToken();
+    response = await fetch(url, { headers: getGitHubHeaders() });
+  }
 
   const total = parseInt(response.headers.get('x-ratelimit-limit'));
   if (!isNaN(total)) {
@@ -130,9 +154,9 @@ async function fetchGithub(url) {
     githubRateLimitRemainingGauge.set(remaining);
   }
 
-
   return response;
 }
+
 
 // =================== Additional Tracking Middleware ===================
 app.use((req, res, next) => {
