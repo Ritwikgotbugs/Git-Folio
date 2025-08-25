@@ -1,73 +1,104 @@
 module.exports = function registerApiRoutes(app, errorCounts, fetchGithub) {
-  const tokens = process.env.GITHUB_TOKENS
-    ? process.env.GITHUB_TOKENS.split(",").map(t => t.trim())
-    : [];
-
-  let currentTokenIndex = 0;
-
-  const getGitHubHeaders = () => {
-    if (tokens.length === 0) {
-      throw new Error("No GitHub tokens configured");
-    }
-    return {
-      'User-Agent': 'GitPort-App',
-      Authorization: `Bearer ${tokens[currentTokenIndex]}`
-    };
-  };
-
-  const rotateToken = () => {
-    currentTokenIndex = (currentTokenIndex + 1) % tokens.length;
-    console.log(`🔄 Rotated to token index ${currentTokenIndex}`);
-  };
-
-  const fetchWithRotation = async (url, res, errorKey, notFoundMsg) => {
-    try {
-      let response = await fetchGithub(url, { headers: getGitHubHeaders() });
-
-      if (response.status === 403) {
-        console.warn("⚠️ Rate limit hit. Rotating token...");
-        rotateToken();
-        response = await fetchGithub(url, { headers: getGitHubHeaders() });
-      }
-
-      if (!response.ok) {
-        errorCounts[errorKey]++;
-        const errorText = await response.text();
-        return res.status(response.status).json({ error: notFoundMsg, details: errorText });
-      }
-
-      const data = await response.json();
-      return res.status(200).json(data);
-
-    } catch (err) {
-      errorCounts[errorKey]++;
-      console.error(`Internal server error in ${url}:`, err);
-      return res.status(500).json({ error: 'Internal server error', details: err.message });
-    }
-  };
+  const getGitHubHeaders = () => ({
+    'User-Agent': 'GitPort-App',
+    Authorization: `Bearer ${process.env.GITHUB_TOKEN}`
+  });
 
   // GitHub user
-  app.get('/api/github/user/:username', (req, res) =>
-    fetchWithRotation(`https://api.github.com/users/${req.params.username}`, res, "user_details", "User not found")
-  );
+  app.get('/api/github/user/:username', async (req, res) => {
+    const { username } = req.params;
+    try {
+      const response = await fetchGithub(`https://api.github.com/users/${username}`, {
+        headers: getGitHubHeaders()
+      });
+      if (!response.ok) {
+        errorCounts.user_details++;
+        const errorText = await response.text();
+        console.error(`GitHub API error for user ${username}:`, response.status, errorText);
+        return res.status(response.status).json({ error: 'User not found', details: errorText });
+      }
+      const data = await response.json();
+      res.status(200).json(data);
+    } catch (err) {
+      errorCounts.user_details++;
+      console.error('Internal server error in /api/github/user:', err);
+      res.status(500).json({ error: 'Internal server error', details: err.message });
+    }
+  });
 
   // GitHub repos
-  app.get('/api/github/repos/:username', (req, res) =>
-    fetchWithRotation(`https://api.github.com/users/${req.params.username}/repos?sort=updated&per_page=100`, res, "user_repos", "Repos not found")
-  );
+  app.get('/api/github/repos/:username', async (req, res) => {
+    const { username } = req.params;
+    try {
+      const response = await fetchGithub(`https://api.github.com/users/${username}/repos?sort=updated&per_page=100`, {
+        headers: getGitHubHeaders()
+      });
+      if (!response.ok) {
+        errorCounts.user_repos++;
+        return res.status(response.status).json({ error: 'Repos not found' });
+      }
+      const data = await response.json();
+      res.status(200).json(data);
+    } catch (err) {
+      errorCounts.user_repos++;
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
   // GitHub events
-  app.get('/api/github/events/:username', (req, res) =>
-    fetchWithRotation(`https://api.github.com/users/${req.params.username}/events?per_page=30`, res, "user_events", "Events not found")
-  );
+  app.get('/api/github/events/:username', async (req, res) => {
+    const { username } = req.params;
+    try {
+      const response = await fetchGithub(`https://api.github.com/users/${username}/events?per_page=30`, {
+        headers: getGitHubHeaders()
+      });
+      if (!response.ok) {
+        errorCounts.user_events++;
+        return res.status(response.status).json({ error: 'Events not found' });
+      }
+      const data = await response.json();
+      res.status(200).json(data);
+    } catch (err) {
+      errorCounts.user_events++;
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
   // GitHub followers
-  app.get('/api/github/followers/:username', (req, res) =>
-    fetchWithRotation(`https://api.github.com/users/${req.params.username}/followers?per_page=30`, res, "user_followers", "Followers not found")
-  );
+  app.get('/api/github/followers/:username', async (req, res) => {
+    const { username } = req.params;
+    try {
+      const response = await fetchGithub(`https://api.github.com/users/${username}/followers?per_page=30`, {
+        headers: getGitHubHeaders()
+      });
+      if (!response.ok) {
+        errorCounts.user_followers++;
+        return res.status(response.status).json({ error: 'Followers not found' });
+      }
+      const data = await response.json();
+      res.status(200).json(data);
+    } catch (err) {
+      errorCounts.user_followers++;
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
   // GitHub following
-  app.get('/api/github/following/:username', (req, res) =>
-    fetchWithRotation(`https://api.github.com/users/${req.params.username}/following?per_page=30`, res, "user_following", "Following not found")
-  );
+  app.get('/api/github/following/:username', async (req, res) => {
+    const { username } = req.params;
+    try {
+      const response = await fetchGithub(`https://api.github.com/users/${username}/following?per_page=30`, {
+        headers: getGitHubHeaders()
+      });
+      if (!response.ok) {
+        errorCounts.user_following++;
+        return res.status(response.status).json({ error: 'Following not found' });
+      }
+      const data = await response.json();
+      res.status(200).json(data);
+    } catch (err) {
+      errorCounts.user_following++;
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 };
