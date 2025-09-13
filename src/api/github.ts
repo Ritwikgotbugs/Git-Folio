@@ -1,4 +1,4 @@
-const WEB_URL = 'http://localhost:4000';
+const WEB_URL = process.env.BACKEND_URL || 'http://localhost:4000';
 
 export async function fetchGitHubUser(username: string) {
   const response = await fetch(`${WEB_URL}/api/github/user/${username}`);
