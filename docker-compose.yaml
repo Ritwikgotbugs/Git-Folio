@@ -5,6 +5,8 @@ services:
     networks: 
       - gitport-network
     image: gitport:latest
+    ports:
+    - "8080:3000"
 
   backend:
     build: ./server
