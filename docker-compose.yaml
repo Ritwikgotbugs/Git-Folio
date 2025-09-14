@@ -56,22 +56,6 @@ services:
     networks:
       - gitport-network
 
-  nginx:
-    build: ./nginx
-    container_name: nginx
-    depends_on:
-      - app
-      - backend
-    ports:
-      - "80:80"
-      - "443:443"
-    networks:
-      - gitport-network
-    restart: unless-stopped
-    volumes:
-      - ./letsencrypt:/etc/letsencrypt
-      - ./certbot:/var/www/certbot
-
   certbot:
     image: certbot/certbot
     container_name: certbot
