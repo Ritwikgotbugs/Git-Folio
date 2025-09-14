@@ -18,6 +18,9 @@ build
 .env.test.local
 .env.production.local
 
+# Env
+letsencrypt/
+
 # IDE files
 .vscode
 .idea
