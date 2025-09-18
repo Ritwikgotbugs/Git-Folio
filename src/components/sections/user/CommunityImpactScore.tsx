@@ -41,7 +41,7 @@ export const CommunityImpactScore = ({
   const scoreInfo = getScoreLevel(impactScore);
 
   return (
-    <Card className="card-minimal">
+    <Card className="bg-[#ffffff0d] border-2">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Award className="w-4 h-4" />

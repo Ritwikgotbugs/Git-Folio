@@ -17,7 +17,7 @@ interface CollaborationNetworkProps {
 export const CollaborationNetwork = ({ followers, following, username }: CollaborationNetworkProps) => {
   if (!followers.length && !following.length) {
     return (
-      <Card className="card-minimal">
+      <Card className="bg-[#ffffff0d] border-2">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-3">
             <Network className="w-5 h-5" />
@@ -56,7 +56,7 @@ export const CollaborationNetwork = ({ followers, following, username }: Collabo
   const networkInfo = getNetworkLevel(networkDensity);
 
   return (
-    <Card className="card-minimal">
+    <Card className="bg-[#ffffff0d] border-2">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Network className="w-4 h-4" />

@@ -93,7 +93,7 @@
 @layer components {
   /* Minimal card styles */
   .card-minimal {
-    @apply bg-card border border-border shadow-sm;
+    @apply bg-card shadow-sm;
   }
 
   /* Simple button styles */
