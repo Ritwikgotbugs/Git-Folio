@@ -143,8 +143,8 @@ export const TechEvolutionChart = ({ repositories, hideTitle = false, className 
   };
 
   return (
-    <div className="h-96 w-full flex flex-col items-center">
-      <div className="flex items-center gap-2 mb-2 text-sm font-medium select-none bg-white/10 rounded-lg p-2 z-10">
+    <div className="h-[400px] md:h-96 w-full flex flex-col items-center overflow-hidden">
+      <div className="flex items-center gap-2 mb-1 md:mb-2 text-xs md:text-sm font-medium select-none bg-white/10 rounded-lg px-2 py-1 md:p-2 z-10">
         <TrendingUpDown className="w-6 h-6 text-white" />
         <span className="font-bold text-white">Tech Stack Evolution</span>
      </div>
@@ -155,10 +155,10 @@ export const TechEvolutionChart = ({ repositories, hideTitle = false, className 
           <h4 className="font-semibold">Technology Evolution</h4>
         </div>
       )}
-      <div className="space-y-4 py-8 flex-1 w-full">
+      <div className="space-y-4 py-6 md:py-8 flex-1 w-full">
         {/* Chart */}
-        <div className="flex-1 w-full">
-          <ResponsiveContainer width="100%" height={300}>
+        <div className="flex-1 w-full" style={{ minHeight: 0 }}>
+          <ResponsiveContainer width="100%" height={260}>
             <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
               <XAxis 
                 dataKey="time" 

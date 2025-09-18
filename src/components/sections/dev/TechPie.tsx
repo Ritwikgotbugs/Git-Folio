@@ -63,21 +63,20 @@ export const LanguageChart = ({ languages }: LanguageChartProps) => {
   );
 
   return (
-    <div className="h-80 flex flex-col items-center">
-     <div className="flex items-center gap-2 mb-2 text-sm font-medium select-none bg-white/10 rounded-lg p-2 z-10">
+    <div className="h-[360px] md:h-80 flex flex-col items-center w-full overflow-hidden">
+     <div className="flex items-center gap-2 mb-1 md:mb-2 text-xs md:text-sm font-medium select-none bg-white/10 rounded-lg px-2 py-1 md:p-2 z-10">
         <Languages className="w-6 h-6 text-white" />
-        <span className="font-bold text-white">Most Languages Used</span>
+        <span className="font-bold text-white whitespace-nowrap">Most Languages Used</span>
      </div>
-
-      <div className="w-full flex-1 py-8">
+      <div className="w-full flex-1 pt-6 md:pt-8">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={60}
-              outerRadius={100}
+              innerRadius={50}
+              outerRadius={90}
               paddingAngle={5}
               dataKey="value"
             >

@@ -109,7 +109,7 @@ export const SocialLinks = ({ user }: SocialLinksProps) => {
   if (socialLinks.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-4 justify-center">
+    <div className="flex flex-wrap gap-4">
       {socialLinks.map((link, index) => {
         const IconComponent = link.icon;
 
