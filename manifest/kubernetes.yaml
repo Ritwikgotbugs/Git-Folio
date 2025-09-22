@@ -1,0 +1,381 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\Ritwik\AppData\Local\Microsoft\WinGet\Links\kompose.exe convert -f docker-compose.yaml -o manifest/kubernets.yaml
+    kompose.version: 1.36.0 (ae2a39403)
+  labels:
+    io.kompose.service: app
+  name: app
+spec:
+  ports:
+    - name: "8000"
+      port: 8000
+      targetPort: 3000
+  selector:
+    io.kompose.service: app
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\Ritwik\AppData\Local\Microsoft\WinGet\Links\kompose.exe convert -f docker-compose.yaml -o manifest/kubernets.yaml
+    kompose.version: 1.36.0 (ae2a39403)
+  labels:
+    io.kompose.service: backend
+  name: backend
+spec:
+  ports:
+    - name: "4000"
+      port: 4000
+      targetPort: 4000
+  selector:
+    io.kompose.service: backend
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\Ritwik\AppData\Local\Microsoft\WinGet\Links\kompose.exe convert -f docker-compose.yaml -o manifest/kubernets.yaml
+    kompose.version: 1.36.0 (ae2a39403)
+  labels:
+    io.kompose.service: grafana
+  name: grafana
+spec:
+  ports:
+    - name: "3000"
+      port: 3000
+      targetPort: 3000
+  selector:
+    io.kompose.service: grafana
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\Ritwik\AppData\Local\Microsoft\WinGet\Links\kompose.exe convert -f docker-compose.yaml -o manifest/kubernets.yaml
+    kompose.version: 1.36.0 (ae2a39403)
+  labels:
+    io.kompose.service: prometheus
+  name: prometheus
+spec:
+  ports:
+    - name: "5000"
+      port: 5000
+      targetPort: 9090
+  selector:
+    io.kompose.service: prometheus
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\Ritwik\AppData\Local\Microsoft\WinGet\Links\kompose.exe convert -f docker-compose.yaml -o manifest/kubernets.yaml
+    kompose.version: 1.36.0 (ae2a39403)
+  labels:
+    io.kompose.service: app
+  name: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: app
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\Ritwik\AppData\Local\Microsoft\WinGet\Links\kompose.exe convert -f docker-compose.yaml -o manifest/kubernets.yaml
+        kompose.version: 1.36.0 (ae2a39403)
+      labels:
+        io.kompose.service: app
+    spec:
+      containers:
+        - image: gitport:latest
+          imagePullPolicy: IfNotPresent
+          name: frontend
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+      restartPolicy: Always
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\Ritwik\AppData\Local\Microsoft\WinGet\Links\kompose.exe convert -f docker-compose.yaml -o manifest/kubernets.yaml
+    kompose.version: 1.36.0 (ae2a39403)
+  labels:
+    io.kompose.service: backend
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: backend
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\Ritwik\AppData\Local\Microsoft\WinGet\Links\kompose.exe convert -f docker-compose.yaml -o manifest/kubernets.yaml
+        kompose.version: 1.36.0 (ae2a39403)
+      labels:
+        io.kompose.service: backend
+    spec:
+      containers:
+        - env:
+            - name: NODE_ENV
+              value: production
+          # local backend image
+          image: gitport-backend:latest
+          imagePullPolicy: IfNotPresent
+          name: backend
+          ports:
+            - containerPort: 4000
+              protocol: TCP
+      restartPolicy: Always
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\Ritwik\AppData\Local\Microsoft\WinGet\Links\kompose.exe convert -f docker-compose.yaml -o manifest/kubernets.yaml
+    kompose.version: 1.36.0 (ae2a39403)
+  labels:
+    io.kompose.service: certbot
+  name: certbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: certbot
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\Ritwik\AppData\Local\Microsoft\WinGet\Links\kompose.exe convert -f docker-compose.yaml -o manifest/kubernets.yaml
+        kompose.version: 1.36.0 (ae2a39403)
+      labels:
+        io.kompose.service: certbot
+    spec:
+      containers:
+        - command:
+            - sh
+            - -c
+            - trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait ${!}; done
+          image: certbot/certbot
+          name: certbot
+          volumeMounts:
+            - mountPath: /var/www/certbot
+              name: certbot-claim1
+      restartPolicy: Always
+      volumes:
+        - name: certbot-claim1
+          persistentVolumeClaim:
+            claimName: certbot-claim1
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    io.kompose.service: certbot-claim1
+  name: certbot-claim1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\Ritwik\AppData\Local\Microsoft\WinGet\Links\kompose.exe convert -f docker-compose.yaml -o manifest/kubernets.yaml
+    kompose.version: 1.36.0 (ae2a39403)
+  labels:
+    io.kompose.service: grafana
+  name: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: grafana
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\Ritwik\AppData\Local\Microsoft\WinGet\Links\kompose.exe convert -f docker-compose.yaml -o manifest/kubernets.yaml
+        kompose.version: 1.36.0 (ae2a39403)
+      labels:
+        io.kompose.service: grafana
+    spec:
+      containers:
+        - env:
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: admin
+            - name: GF_SECURITY_ADMIN_USER
+              value: admin
+            - name: GF_USERS_ALLOW_SIGN_UP
+              value: "false"
+          image: grafana/grafana:latest
+          name: grafana
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/grafana
+              name: grafana-data
+            - mountPath: /etc/grafana/provisioning
+              name: grafana-claim1
+      restartPolicy: Always
+      volumes:
+        - name: grafana-data
+          persistentVolumeClaim:
+            claimName: grafana-data
+        - name: grafana-claim1
+          persistentVolumeClaim:
+            claimName: grafana-claim1
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    io.kompose.service: grafana-data
+  name: grafana-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    io.kompose.service: grafana-claim1
+  name: grafana-claim1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\Ritwik\AppData\Local\Microsoft\WinGet\Links\kompose.exe convert -f docker-compose.yaml -o manifest/kubernets.yaml
+    kompose.version: 1.36.0 (ae2a39403)
+  labels:
+    io.kompose.service: prometheus
+  name: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: prometheus
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\Ritwik\AppData\Local\Microsoft\WinGet\Links\kompose.exe convert -f docker-compose.yaml -o manifest/kubernets.yaml
+        kompose.version: 1.36.0 (ae2a39403)
+      labels:
+        io.kompose.service: prometheus
+    spec:
+      containers:
+        - args:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+            - --web.console.libraries=/etc/prometheus/console_libraries
+            - --web.console.templates=/etc/prometheus/consoles
+            - --storage.tsdb.retention.time=200h
+            - --web.enable-lifecycle
+          image: prom/prometheus:latest
+          name: prometheus
+          ports:
+            - containerPort: 9090
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /etc/prometheus/prometheus.yml
+              name: prometheus-cm0
+              subPath: prometheus.yml
+            - mountPath: /prometheus
+              name: prometheus-data
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            items:
+              - key: prometheus.yml
+                path: prometheus.yml
+            name: prometheus-cm0
+          name: prometheus-cm0
+        - name: prometheus-data
+          persistentVolumeClaim:
+            claimName: prometheus-data
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    io.kompose.service: prometheus-data
+  name: prometheus-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+
+---
+apiVersion: v1
+data:
+  prometheus.yml: |-
+    # prometheus --config.file=C:\Users\Ritwik\Desktop\All\Projects\GitPort\dev-port-wizard\prometheus.yml --web.listen-address=:5000
+
+
+    global:
+      scrape_interval: 2s
+      evaluation_interval: 5s
+
+    rule_files:
+      # - "first_rules.yml"
+      # - "second_rules.yml"
+
+    scrape_configs:
+      - job_name: 'git-port-backend'
+        static_configs:
+          - targets: ['backend:4000']
+        metrics_path: '/metrics'
+        scrape_interval: 2s
+        scrape_timeout: 1s
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+              # - alertmanager:9093
+kind: ConfigMap
+metadata:
+  annotations:
+    use-subpath: "true"
+  labels:
+    io.kompose.service: prometheus
+  name: prometheus-cm0
+
