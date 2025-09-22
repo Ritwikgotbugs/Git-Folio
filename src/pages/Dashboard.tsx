@@ -1,19 +1,16 @@
 import { fetchGitHubEvents, fetchGitHubFollowers, fetchGitHubFollowing, fetchGitHubRepos, fetchGitHubUser } from "@/api/github";
-import { ActivityTimeline } from "@/components/ActivityTimeline";
-import { CollaborationNetwork } from "@/components/CollaborationNetwork";
-import { CommunityImpactScore } from "@/components/CommunityImpactScore";
-import { ContributionGraph } from "@/components/ContributionGraph";
-import { LanguageChart } from "@/components/LanguageChart";
-import { RepoHealthMetrics } from "@/components/RepoHealthMetrics";
-import { RepositoryPerformanceChart } from "@/components/RepositoryPerformanceChart";
-import { SocialLinks } from "@/components/SocialLinks";
-import { TechEvolutionChart } from "@/components/TechEvolutionChart";
-import { TopRepository } from "@/components/TopRepository";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ContactSection } from "@/components/sections/contacts";
+import { TechEvolutionChart } from "@/components/sections/dev/TechEvolution";
+import { LanguageChart } from "@/components/sections/dev/TechPie";
+import { TechStackSection } from "@/components/sections/dev/TechStack";
+import { HeroIntro } from "@/components/sections/hero";
+import { ProjectsSection } from "@/components/sections/projects";
+import { CollaborationNetwork } from "@/components/sections/user/CollaborationNetwork";
+import { CommunityImpactScore } from "@/components/sections/user/CommunityImpactScore";
+import { RepoHealthMetrics } from "@/components/sections/user/RepoHealthMetrics";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Calendar, GitFork, Link2, MapPin, Share2, Star } from "lucide-react";
+import { Code2, TrendingUp, User2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import NotFound from "./NotFound";
@@ -29,7 +26,9 @@ interface GitHubUser {
   followers: number;
   following: number;
   created_at: string;
-  html_url: string;
+  html_url: string | null;
+  twitter_username: string | null;
+  email: string | null;
 }
 
 interface GitHubRepo {
@@ -193,7 +192,6 @@ const Dashboard = () => {
 
       // Fetch user events (activity)
       const eventsData = await fetchGitHubEvents(username);
-      console.log(eventsData);
 
       // Fetch followers and following
       const followersData = await fetchGitHubFollowers(username);
@@ -254,36 +252,7 @@ const Dashboard = () => {
     });
   };
 
-  const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/dashboard/${user?.login}`;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `${user?.name || user?.login}'s GitHub Portfolio`,
-          text: `Check out ${user?.name || user?.login}'s amazing GitHub portfolio!`,
-          url: shareUrl,
-        });
-      } catch (error) {
-        // User cancelled sharing
-      }
-    } else {
-      // Fallback to copying to clipboard
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        toast({
-          title: "Link copied!",
-          description: "Portfolio URL has been copied to clipboard",
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to copy link to clipboard",
-          variant: "destructive",
-        });
-      }
-    }
-  };
+  // Share button removed per request
 
   // Calculate total stars and forks
   const totalStars = repos.reduce((sum, repo) => sum + repo.stargazers_count, 0);
@@ -296,30 +265,17 @@ const Dashboard = () => {
       ) : (
         <>
           {/* Header */}
-          <div className="border-b border-border">
-            <div className="container mx-auto px-4 py-4">
-              <div className="flex items-center justify-between">
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate("/")}
-                  className="flex items-center gap-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back to Search
-                </Button>
-                
-                {user && (
-                  <Button
-                    onClick={handleShare}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <Share2 className="w-4 h-4" />
-                    Share
-                  </Button>
-                )}
-              </div>
+          <div className="w-full bg-background/80 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60 px-9 py-4">
+            <div className="flex items-center justify-between gap-6 max-w-9xl">
+              <button onClick={() => navigate('/')} className="text-xl font-bold tracking-tight gradient-text focus:outline-none">GitFolio</button>
+              {user && (
+                <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
+                  <button onClick={() => document.getElementById('skills')?.scrollIntoView({behavior:'smooth'})} className="hover:text-primary transition-colors">Skills</button>
+                  <button onClick={() => document.getElementById('projects')?.scrollIntoView({behavior:'smooth'})} className="hover:text-primary transition-colors">Projects</button>
+                  <button onClick={() => document.getElementById('stats')?.scrollIntoView({behavior:'smooth'})} className="hover:text-primary transition-colors">Stats</button>
+                  <button onClick={() => document.getElementById('contact')?.scrollIntoView({behavior:'smooth'})} className="hover:text-primary transition-colors">Get in touch</button>
+                </nav>
+              )}
             </div>
           </div>
 
@@ -329,88 +285,55 @@ const Dashboard = () => {
 
             {user && !loading && (
               <div className="space-y-8">
-                {/* User Profile and Top Repository */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* User Profile Card */}
-                  <div className="lg:col-span-2">
-                    <Card className="card-minimal">
-                      <CardContent className="p-6">
-                        <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
-                          <img
-                            src={user.avatar_url}
-                            alt={user.name || user.login}
-                            className="w-32 h-32 rounded-2xl border border-border"
-                          />
-                          
-                          <div className="flex-1 text-center lg:text-left space-y-4">
-                            <div>
-                              <h2 className="text-3xl font-bold mb-2">
-                                {user.name || user.login}
-                              </h2>
-                              <p className="text-lg text-muted-foreground">@{user.login}</p>
-                            </div>
-                            
-                            {user.bio && (
-                              <p className="text-muted-foreground leading-relaxed max-w-2xl">
-                                {user.bio}
-                              </p>
-                            )}
-                            
-                            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground justify-center lg:justify-start">
-                              {user.location && (
-                                <div className="flex items-center gap-2">
-                                  <MapPin className="w-4 h-4" />
-                                  {user.location}
-                                </div>
-                              )}
-                              {user.blog && (
-                                <div className="flex items-center gap-2">
-                                  <Link2 className="w-4 h-4" />
-                                  <a href={user.blog} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                                    {user.blog}
-                                  </a>
-                                </div>
-                              )}
-                              <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4" />
-                                Joined {formatDate(user.created_at)}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-border">
-                          <div className="text-center p-4 rounded-lg bg-muted h-24 flex flex-col justify-center">
-                            <div className="text-2xl font-bold mb-1">{user.public_repos}</div>
-                            <div className="text-sm text-muted-foreground">Repositories</div>
-                          </div>
-                          <div className="text-center p-4 rounded-lg bg-muted h-24 flex flex-col justify-center">
-                            <div className="text-2xl font-bold mb-1">{user.followers}</div>
-                            <div className="text-sm text-muted-foreground">Followers</div>
-                          </div>
-                          <div className="text-center p-4 rounded-lg bg-muted h-24 flex flex-col justify-center">
-                            <div className="text-2xl font-bold mb-1">{user.following}</div>
-                            <div className="text-sm text-muted-foreground">Following</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+                {/* Hero Intro */}
+                <HeroIntro
+                  user={{
+                    login: user.login,
+                    name: user.name,
+                    avatar_url: user.avatar_url,
+                    bio: user.bio,
+                    blog: user.blog,
+                    html_url: user.html_url
+                  }}
+                  topLanguages={languages}
+                />
 
-                  {/* Most Starred Repository */}
-                  <div className="lg:col-span-1">
-                    {repos.length > 0 && (
-                      <TopRepository repository={repos.sort((a, b) => b.stargazers_count - a.stargazers_count)[0]} />
-                    )}
-                    <div className="mt-6">
-                      <SocialLinks user={user} />
-                    </div>
-                  </div>
+                <div className="flex items-center gap-3" id="skills">
+                  <Code2 className="w-6 h-6 text-primary" />
+                  <h3 className="text-3xl font-bold gradient-text">Tech Stack and Skills</h3>
+                </div>
+                <TechStackSection repositories={repos} hideTitle />
+
+                <ProjectsSection repositories={repos} title="Projects" />
+
+                 <div className="flex items-center gap-3">
+                  <TrendingUp className="w-6 h-6 text-primary" />
+                  <h3 className="text-3xl font-bold gradient-text">Developer Analytics</h3>
                 </div>
 
-                {/* Metrics Row - Compact Layout */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <Card className="bg-[#ffffff0d] border-2" id="stats">
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
+                      <div className="rounded-lg p-4 flex flex-col">
+                        <LanguageChart languages={languages} />
+                      </div>
+                      <div className="rounded-lg p-4 flex flex-col">
+                        <TechEvolutionChart repositories={repos} hideTitle />
+                      </div>
+                      {/* <div className="rounded-lg p-4 flex flex-col">
+                        <TechStackSection repositories={repos} hideTitle />
+                      </div> */}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                 <div className="flex items-center gap-3">
+                  <User2 className="w-6 h-6 text-primary" />
+                  <h3 className="text-3xl font-bold gradient-text">Community and Repos</h3>
+                </div>
+
+
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <CommunityImpactScore
                     followers={user.followers}
                     following={user.following}
@@ -425,99 +348,16 @@ const Dashboard = () => {
                     username={username || ""}
                   />
                 </div>
-
-                {/* Analytics Section */}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                  {/* Language Distribution */}
-                  <LanguageChart languages={languages} />
-
-                  {/* Contribution Activity */}
-                  <ContributionGraph username={username || ""} />
-                </div>
-
-                {/* Repository Performance */}
-                <RepositoryPerformanceChart repositories={repos} />
-
-                {/* Activity Timeline and Tech Evolution */}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                  <ActivityTimeline events={events} />
-                  <TechEvolutionChart repositories={repos} />
-                </div>
-
-                {/* Stars vs Forks Evolution */}
-                {/* <StarsForksChart repositories={repos} /> */}
-
-                {/* Recently Updated Repositories */}
-                <div>
-                  <h3 className="text-2xl font-bold mb-6">Recently Updated Repositories</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {repos
-                      .filter(repo => {
-                        const lastUpdate = new Date(repo.updated_at);
-                        const oneMonthAgo = new Date();
-                        oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-                        return lastUpdate > oneMonthAgo;
-                      })
-                      .slice(0, 12)
-                      .map((repo) => (
-                      <Card
-                        key={repo.id}
-                        className="card-minimal cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() => window.open(repo.html_url, "_blank")}
-                      >
-                        <CardHeader className="pb-4">
-                          <CardTitle className="text-lg">
-                            {repo.name}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          {repo.description && (
-                            <p className="text-muted-foreground text-sm line-clamp-2">
-                              {repo.description}
-                            </p>
-                          )}
-                          
-                          {repo.topics && repo.topics.length > 0 && (
-                            <div className="flex flex-wrap gap-2">
-                              {repo.topics.slice(0, 3).map((topic) => (
-                                <Badge key={topic} variant="secondary" className="text-xs">
-                                  {topic}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-
-                          <div className="flex items-center justify-between text-sm text-muted-foreground">
-                            <div className="flex items-center gap-4">
-                              {repo.language && (
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-full bg-primary"></div>
-                                  <span>{repo.language}</span>
-                                </div>
-                              )}
-                              <div className="flex items-center gap-1">
-                                <Star className="w-4 h-4" />
-                                <span>{repo.stargazers_count}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <GitFork className="w-4 h-4" />
-                                <span>{repo.forks_count}</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="text-xs text-muted-foreground bg-muted px-3 py-2 rounded">
-                            Updated {formatDate(repo.updated_at)}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
               </div>
             )}
           </div>
+          {user && (
+            <footer className="mt-12 border-t border-border bg-background/40" id="contact">
+              <div className="mx-auto max-w-7xl px-4">
+                <ContactSection user={{ login: user.login, blog: user.blog, html_url: user.html_url, email: user.email }} />
+              </div>
+            </footer>
+          )}
         </>
       )}
     </div>

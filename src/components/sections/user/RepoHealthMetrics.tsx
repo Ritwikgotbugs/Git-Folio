@@ -25,7 +25,7 @@ interface RepoHealthMetricsProps {
 export const RepoHealthMetrics = ({ repositories }: RepoHealthMetricsProps) => {
   if (!repositories.length) {
     return (
-      <Card className="card-minimal">
+      <Card className="bg-[#ffffff0d] border-2">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-3">
             <Heart className="w-5 h-5" />
@@ -92,7 +92,7 @@ export const RepoHealthMetrics = ({ repositories }: RepoHealthMetricsProps) => {
   const HealthIcon = healthInfo.icon;
 
   return (
-    <Card className="card-minimal">
+    <Card className="bg-[#ffffff0d] border-2">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Heart className="w-4 h-4" />
