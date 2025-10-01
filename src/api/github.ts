@@ -1,4 +1,4 @@
-const WEB_URL = process.env.REACT_APP_BACKEND_URL || "https://gitfolio.ddns.net";
+const WEB_URL = "http://13.127.73.202:4000";
 // const WEB_URL = "http://localhost:4000";
 
 export async function fetchGitHubUser(username: string) {

@@ -11,7 +11,7 @@ if ! command -v kubectl &> /dev/null; then
 fi
 
 # Check if K3s cluster is running
-if ! kubectl cluster-info &> /dev/null; then
+if ! k3s kubectl cluster-info &> /dev/null; then
     echo "❌ K3s cluster is not running. Please start K3s first."
     exit 1
 fi
@@ -29,11 +29,11 @@ rm $TMP_IMG
 
 # Create namespace
 echo "📁 Creating namespace..."
-kubectl create namespace gitport --dry-run=client -o yaml | kubectl apply -f -
+k3s kubectl create namespace gitport --dry-run=client -o yaml | kubectl apply -f -
 
 # Apply Kubernetes manifests
 echo "📋 Applying Kubernetes manifests..."
-kubectl apply -f manifest/ -n gitport
+k3s kubectl apply -f manifest/ -n gitport
 
 
 # Get your public IP
